@@ -1507,7 +1507,18 @@ class KubeSpawner(Spawner):
 
         Defaults to `1`.
         """,
-    )
+    ),
+
+    notebook_container_name = Unicode(
+        "notebook",
+        config=True,
+        help="""
+        The name of the notebook container withing the singleuser pod.
+
+        Customizing this can be useful if using AKS and OMS monitoring to get notebook
+        log history in OMS.
+        """
+    ),
 
     # deprecate redundant and inconsistent singleuser_ and user_ prefixes:
     _deprecated_traits_09 = [
@@ -1849,6 +1860,7 @@ class KubeSpawner(Spawner):
             ssl_secret_name=self.secret_name if self.internal_ssl else None,
             ssl_secret_mount_path=self.secret_mount_path,
             logger=self.log,
+            notebook_container_name=self.notebook_container_name
         )
 
     def get_secret_manifest(self, owner_reference):
@@ -2007,7 +2019,7 @@ class KubeSpawner(Spawner):
                 return 1
             for c in ctr_stat:
                 # return exit code if notebook container has terminated
-                if c["name"] == 'notebook':
+                if c["name"] == self.notebook_container_name:
                     if "terminated" in c["state"]:
                         # call self.stop to delete the pod
                         if self.delete_stopped_pods:

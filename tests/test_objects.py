@@ -2196,3 +2196,40 @@ def test_make_namespace():
             'name': 'test-namespace',
         },
     }
+
+def test_make_custom_notebook_container_name_pod():
+    """
+    Test specification of a pod with a custom notebook name
+    """
+    custom_notebook_container_name = "custom"
+    assert api_client.sanitize_for_serialization(
+        make_pod(
+            name='test',
+            image='jupyter/singleuser:latest',
+            cmd=['jupyterhub-singleuser'],
+            port=8888,
+            image_pull_policy='IfNotPresent',
+            notebook_container_name = custom_notebook_container_name,
+        )
+    ) == {
+        "metadata": {"name": "test", "labels": {}, "annotations": {}},
+        "spec": {
+            'automountServiceAccountToken': False,
+            "containers": [
+                {
+                    "env": [],
+                    "name": custom_notebook_container_name,
+                    "image": "jupyter/singleuser:latest",
+                    "imagePullPolicy": "IfNotPresent",
+                    "args": ["jupyterhub-singleuser"],
+                    "ports": [{"name": "notebook-port", "containerPort": 8888}],
+                    'volumeMounts': [],
+                    "resources": {"limits": {}, "requests": {}},
+                }
+            ],
+            'restartPolicy': 'OnFailure',
+            'volumes': [],
+        },
+        "kind": "Pod",
+        "apiVersion": "v1",
+    }

@@ -97,6 +97,7 @@ def make_pod(
     ssl_secret_name=None,
     ssl_secret_mount_path=None,
     logger=None,
+    notebook_container_name=None
 ):
     """
     Make a k8s pod specification for running a user notebook.
@@ -307,6 +308,9 @@ def make_pod(
 
     ssl_secret_mount_path:
         Specifies the name of the ssl secret mount path for the pod
+
+    notebook_container_name:
+        Specifies the container name used for the notebook in the pod
     """
 
     pod = V1Pod()
@@ -415,6 +419,9 @@ def make_pod(
         psc = None
     pod.spec.security_context = psc
 
+    if notebook_container_name is None:
+        notebook_container_name = 'notebook'
+
     csc = {}
     # populate with uid / gid / privileged / allow_privilege_escalation
     if uid is not None:
@@ -448,7 +455,7 @@ def make_pod(
         else:
             prepared_env.append(V1EnvVar(name=k, value=v))
     notebook_container = V1Container(
-        name='notebook',
+        name=notebook_container_name,
         image=image,
         working_dir=working_dir,
         ports=[V1ContainerPort(name='notebook-port', container_port=port)],
